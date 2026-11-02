@@ -1,0 +1,98 @@
+Experiment 2: DUMS
+Dhaka Urban Management System
+Phase 1: Requirement Analysis
+1(a). Problems
+1. Traffic congestion.
+2. Poor waste management.
+3. Slow complaint handling.
+1(b). Objectives
+- Primary: Automate urban services.
+- Specific:
+  1. Manage complaints.
+  2. Dispatch services.
+  3. Monitor traffic.
+  4. Generate reports.
+1(c). Actors
+Actor	Responsibility
+Citizen	Submit complaints
+Admin	Manage services
+Service Team	Solve complaints
+Traffic API	Provide traffic data
+
+System boundary: DUMS software is internal; citizens, service teams and external APIs are external.
+
+1(d). Requirements
+
+Functional:
+1. Submit complaints.
+2. Create urban services.
+3. Select routes.
+4. Send notifications.
+Non-functional:
+1. Reliability.
+2. Maintainability.
+Phase 2: Object Identification
+2(a). Entity classes
+Class	Attributes
+Citizen	id, name
+Complaint	id, status
+UrbanService	id, type
+Route	distance, time
+TrafficData	speed, congestion
+
+2(b). Control classes
+Class	Responsibility
+ComplaintController	Manage complaints
+ServiceDispatcher	Dispatch services
+RoutePlanner	Select routes
+
+2(c). Boundary classes
+Class	Responsibility
+CitizenApp	Submit complaints
+TrafficAPIAdapter	Get traffic data
+ServiceTeamApp	Receive assignments
+
+Phase 3: CRC Cards
+Class	Responsibilities	Collaborators
+Citizen	Submit complaints	Complaint
+Complaint	Store ID, status	Controller
+ComplaintController	Validate complaints	Citizen, Dispatcher
+ServiceDispatcher	Create, assign services	UrbanService
+RoutePlanner	Select best route	TrafficAdapter
+TrafficAPIAdapter	Convert traffic data	TrafficAPI
+
+Phase 4: UML Modeling
+4(a). Class diagram
+
+UrbanDatabase
+      |
+ComplaintController
+   /        \
+Complaint  ServiceDispatcher
+                 |
+             UrbanService
+                 |
+             RoutePlanner
+              /       \
+       RouteStrategy  TrafficAdapter
+
+
+
+4(b). Sequence diagram
+
+Citizen → Controller: Submit complaint
+Controller → Database: Save complaint
+Database → Controller: OPEN
+Controller → Factory: Create service
+Factory → Controller: Service
+Controller → Adapter: Get traffic
+Adapter → Controller: Traffic data
+Controller → Planner: Select route
+
+alt Route available
+ Planner → Controller: Route
+ Controller → Database: IN_PROGRESS
+ Controller → Observer: Notify
+else No route
+ Complaint remains OPEN
+end
