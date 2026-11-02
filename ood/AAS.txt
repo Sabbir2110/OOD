@@ -1,0 +1,95 @@
+Experiment 1: AAS
+Agricultural Automation System
+Phase 1: Requirement Analysis
+1(a). Problems
+1. Manual monitoring wastes time.
+2. Excessive water usage.
+3. Delayed irrigation decisions.
+1(b). Objectives
+- Primary: Automate farming.
+- Specific:
+  1. Monitor soil moisture.
+  2. Control irrigation.
+  3. Check weather.
+  4. Notify farmers.
+1(c). Actors
+Actor	Responsibility
+Farmer	Request irrigation
+Admin	Manage farm
+IoT Sensor	Provide readings
+Weather Service	Provide weather data
+
+System boundary: Farm software is internal; sensors and weather services are external.
+
+1(d). Requirements
+
+Functional:
+1. Read soil moisture.
+2. Check weather.
+3. Control pump.
+4. Send alerts.
+Non-functional:
+1. Reliability.
+2. Usability.
+Phase 2: Object Identification
+2(a). Entity classes
+Class	Attributes
+Crop	id, name
+Field	id, area
+SoilSensor	id, moisture
+WeatherData	temperature, rain
+IrrigationPump	id, status
+
+2(b). Control classes
+Class	Responsibility
+IrrigationController	Control irrigation
+SensorController	Read sensors
+AlertController	Send alerts
+
+2(c). Boundary classes
+Class	Responsibility
+FarmerMobileApp	Farmer interaction
+WeatherAPIAdapter	Weather connection
+SensorInterface	Sensor connection
+
+Phase 3: CRC Cards
+Class	Responsibilities	Collaborators
+SoilSensor	Read moisture	Controller
+WeatherData	Store weather	WeatherService
+IrrigationController	Decide irrigation	Sensor, Pump
+IrrigationStrategy	Apply rules	Controller
+WeatherAPIAdapter	Convert weather data	WeatherService
+FarmerNotifier	Send alerts	AlertController
+
+Phase 4: UML Modeling
+4(a). Class diagram
+
+FarmDataManager
+      |
+IrrigationController
+   /    |     \
+Sensor Strategy WeatherService
+  |                 |
+SoilSensor     WeatherAPIAdapter
+  |
+IrrigationPump
+
+Controller → AlertPublisher → FarmerNotifier
+
+4(b). Sequence diagram
+
+Farmer → Controller: Check
+Controller → Sensor: Read moisture
+Sensor → Controller: Data
+Controller → Adapter: Get weather
+Adapter → WeatherService: Request
+WeatherService → Controller: Data
+Controller → Strategy: Decide
+
+alt Required
+ Pump ON
+else Not required
+ Pump OFF
+end
+
+Controller → Notifier: Send alert
