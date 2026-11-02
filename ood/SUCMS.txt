@@ -1,0 +1,94 @@
+Experiment 3: SUCMS
+Smart University Campus Management System
+Phase 1: Requirement Analysis
+1(a). Problems
+1. Manual registration.
+2. Repeated score calculation.
+3. Improper notifications.
+1(b). Objectives
+- Primary: Automate university management.
+- Specific:
+  1. Create accounts.
+  2. Register courses.
+  3. Calculate results.
+  4. Send notifications.
+1(c). Actors
+Actor	Responsibility
+Student	Register courses
+Faculty	Submit marks
+Admin	Manage accounts
+Librarian	Manage books
+
+System boundary: Portals, controllers and adapters are internal; people and external library services are external.
+
+1(d). Requirements
+
+Functional:
+1. Create accounts.
+2. Register courses.
+3. Evaluate marks.
+4. Send notices.
+Non-functional:
+1. Maintainability.
+2. Reliability.
+Phase 2: Object Identification
+2(a). Entity classes
+Class	Attributes
+Student	id, role
+Course	code, credits
+Marks	exam, coursework
+LibraryBook	isbn, title
+Notice	id, message
+
+2(b). Control classes
+Class	Responsibility
+CourseRegistrationManager	Manage registration
+EvaluationService	Calculate results
+NoticePublisher	Send notices
+
+2(c). Boundary classes
+Class	Responsibility
+StudentPortal	Display results
+FacultyPortal	Display notices
+LibraryAdapter	Connect library
+
+Phase 3: CRC Cards
+Class	Responsibilities	Collaborators
+Student	Store ID, identify user	AccountFactory
+Course	Store course details	RegistrationManager
+CourseRegistrationManager	Check credits, register	Student, Course
+EvaluationService	Calculate, publish results	Marks, Strategy
+NoticePublisher	Send, remove notices	Portals
+LibraryAdapter	Check book availability	LibraryService
+
+Phase 4: UML Modeling
+4(a). Class diagram
+
+
+UniversityConfig
+Student
+Course
+CourseRegistrationManager
+AccountFactory
+EvaluationStrategy
+EvaluationService
+NoticePublisher
+LibraryAdapter
+
+
+4(b). Sequence diagram
+
+
+Faculty → Marks: Enter marks
+Marks → Faculty: Validate
+
+alt Valid
+ Faculty → EvaluationService: Evaluate
+ EvaluationService → Strategy: Calculate
+ Strategy → EvaluationService: Score
+ EvaluationService → NoticePublisher: Publish
+ NoticePublisher → StudentPortal: Notify
+else Invalid
+ Marks → Faculty: Reject
+ No result published
+end
