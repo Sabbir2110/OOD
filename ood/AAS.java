@@ -1,153 +1,89 @@
 
 import java.util.*;
 
-interface Sensor {
-    double read();
-}
-
-class SoilMoistureSensor implements Sensor {
-    public double read() { return 30; }
-}
-
-class TemperatureSensor implements Sensor {
-    public double read() { return 28; }
-}
-
-class SensorFactory {
-    static Sensor create(String type) {
-        switch(type.toLowerCase()) {
-            case "soil": return new SoilMoistureSensor();
-            case "temperature": return new TemperatureSensor();
-            default: throw new IllegalArgumentException("Invalid sensor");
-        }
-    }
-}
-
-class FarmDataManager {
-    private static final FarmDataManager obj = new FarmDataManager();
-    private FarmDataManager() {}
-    static FarmDataManager getInstance() { return obj; }
-}
-
-interface Observer {
-    void update(String msg);
-}
-
-class FarmerNotifier implements Observer {
-    public void update(String msg) {
-        System.out.println("Farmer: " + msg);
-    }
-}
-
-class FarmDashboard implements Observer {
-    public void update(String msg) {
-        System.out.println("Dashboard: " + msg);
-    }
-}
-
-class AlertPublisher {
-    List<Observer> observers = new ArrayList<>();
-
-    void subscribe(Observer o) { observers.add(o); }
-    void unsubscribe(Observer o) { observers.remove(o); }
-
-    void notifyAllObservers(String msg) {
-        for(Observer o : observers) o.update(msg);
-    }
-}
-
-interface IrrigationStrategy {
-    boolean shouldIrrigate(double moisture, boolean rain);
-}
-
-class NormalIrrigationStrategy implements IrrigationStrategy {
-    public boolean shouldIrrigate(double m, boolean r) {
-        return m < 40 && !r;
-    }
-}
-
-class WaterSavingStrategy implements IrrigationStrategy {
-    public boolean shouldIrrigate(double m, boolean r) {
-        return m < 25 && !r;
-    }
-}
-
-class ExternalWeather {
-    boolean getRainStatus() { return false; }
-}
-
-interface WeatherService {
-    boolean isRainExpected();
-}
-
-class WeatherAPIAdapter implements WeatherService {
-    ExternalWeather weather = new ExternalWeather();
-    public boolean isRainExpected() {
-        return weather.getRainStatus();
-    }
-}
-
-class IrrigationController {
-    IrrigationStrategy strategy;
-    WeatherService weather = new WeatherAPIAdapter();
-    AlertPublisher publisher;
-
-    IrrigationController(IrrigationStrategy s, AlertPublisher p) {
-        strategy = s;
-        publisher = p;
-    }
-
-    void check(double moisture) {
-        if(moisture < 0 || moisture > 100) {
-            System.out.println("Invalid reading");
-            return;
-        }
-
-        boolean on = strategy.shouldIrrigate(
-            moisture, weather.isRainExpected());
-
-        System.out.println(on ? "Pump ON" : "Pump OFF");
-        publisher.notifyAllObservers(on ?
-            "Irrigation started" : "Irrigation not required");
-    }
-
-    void setStrategy(IrrigationStrategy s) {
-        strategy = s;
-    }
-}
-
 public class Main {
+    static class FarmDataManager {
+        static FarmDataManager obj = new FarmDataManager();
+        private FarmDataManager() {}
+    }
+
+    interface Sensor { double read(); }
+
+    static class SoilSensor implements Sensor {
+        public double read() { return 30; }
+    }
+
+    static class TempSensor implements Sensor {
+        public double read() { return 28; }
+    }
+
+    static class SensorFactory {
+        static Sensor create(String s) {
+            if(s.equals("soil")) return new SoilSensor();
+            if(s.equals("temp")) return new TempSensor();
+            throw new IllegalArgumentException();
+        }
+    }
+
+    interface Observer { void update(String s); }
+
+    static class Farmer implements Observer {
+        public void update(String s) { System.out.println(s); }
+    }
+
+    static class Dashboard implements Observer {
+        public void update(String s) { System.out.println(s); }
+    }
+
+    static class Publisher {
+        List<Observer> list = new ArrayList<>();
+        void add(Observer o) { list.add(o); }
+        void remove(Observer o) { list.remove(o); }
+        void notifyAll(String s) {
+            for(Observer o:list) o.update(s);
+        }
+    }
+
+    interface Strategy { boolean check(double m, boolean rain); }
+
+    static class Normal implements Strategy {
+        public boolean check(double m, boolean r) {
+            return m<40 && !r;
+        }
+    }
+
+    static class Saving implements Strategy {
+        public boolean check(double m, boolean r) {
+            return m<25 && !r;
+        }
+    }
+
+    static class ExternalWeather {
+        boolean rain() { return false; }
+    }
+
+    interface WeatherService { boolean checkRain(); }
+
+    static class WeatherAdapter implements WeatherService {
+        ExternalWeather w = new ExternalWeather();
+        public boolean checkRain() { return w.rain(); }
+    }
+
     public static void main(String[] args) {
+        System.out.println(FarmDataManager.obj==FarmDataManager.obj);
 
-        FarmDataManager a = FarmDataManager.getInstance();
-        FarmDataManager b = FarmDataManager.getInstance();
-        System.out.println(a == b);
+        Sensor s=SensorFactory.create("soil");
+        Publisher p=new Publisher();
+        p.add(new Farmer());
+        p.add(new Dashboard());
 
-        Sensor soil = SensorFactory.create("soil");
-        Sensor temp = SensorFactory.create("temperature");
-        System.out.println(soil.read());
-        System.out.println(temp.read());
+        Strategy st=new Normal();
+        WeatherService w=new WeatherAdapter();
 
-        AlertPublisher p = new AlertPublisher();
-        Observer f = new FarmerNotifier();
-        Observer d = new FarmDashboard();
+        double m=s.read();
+        boolean on=st.check(m,w.checkRain());
 
-        p.subscribe(f);
-        p.subscribe(d);
-
-        IrrigationController c =
-            new IrrigationController(new NormalIrrigationStrategy(), p);
-
-        c.check(30);
-        c.setStrategy(new WaterSavingStrategy());
-        c.check(30);
-        c.check(20);
-        c.check(40);
-        c.check(25);
-        c.check(-5);
-        c.check(105);
-
-        p.unsubscribe(d);
-        p.notifyAllObservers("Test alert");
+        System.out.println(on?"Pump ON":"Pump OFF");
+        p.notifyAll(on?"Irrigation ON":"Irrigation OFF");
     }
 }
